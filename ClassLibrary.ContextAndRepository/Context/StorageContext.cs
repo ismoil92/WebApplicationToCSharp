@@ -9,10 +9,14 @@ public class StorageContext : DbContext
     public DbSet<Category> Categories { get; set; }
     public DbSet<Storage> Storages { get; set; }
 
+    private string _connectionString = string.Empty;
+
+    public StorageContext(string connectionString) => _connectionString = connectionString;
+
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer(@"Server=HP-NETBOOK-WIN\SQLEXPRESS; Database=GB;Integrated Security=False;TrustServerCertificate=True; Trusted_Connection=True;")
+        optionsBuilder.UseSqlServer(_connectionString)
             .UseLazyLoadingProxies();
     }
 
