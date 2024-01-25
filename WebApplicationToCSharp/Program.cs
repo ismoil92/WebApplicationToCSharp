@@ -1,25 +1,36 @@
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using ClassLibrary.ModelsAbstractsServicesContext.Abstractions;
+using ClassLibrary.ModelsAbstractsServicesContext.Context;
+using ClassLibrary.ModelsAbstractsServicesContext.Mapper;
+using ClassLibrary.ModelsAbstractsServicesContext.Models.DTO;
+using ClassLibrary.ModelsAbstractsServicesContext.Mutation;
+using ClassLibrary.ModelsAbstractsServicesContext.Query;
+using ClassLibrary.ModelsAbstractsServicesContext.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddMemoryCache();
+builder.Services.AddAutoMapper(typeof(MapperProfile));
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddTransient<IProductService<ProductDTO>, ProductService>();
+builder.Services.AddTransient<IStorageService<StorageDTO>, StorageService>();
+builder.Services.AddTransient<ICategoryService<CategoryDTO>, CategoryService>();
+
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+builder.Host.ConfigureContainer<ContainerBuilder>(cb =>
+    cb.Register(c => new StorageDbContext(builder.Configuration.GetConnectionString("db"))).InstancePerDependency());
+
+
+builder.Services.AddGraphQLServer()
+    .AddQueryType<QueryClass>()
+    .AddMutationType<MutationClass>();
+
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.MapGraphQL();
 
-app.UseHttpsRedirection();
 
-app.UseAuthorization();
-
-app.MapControllers();
 
 app.Run();
